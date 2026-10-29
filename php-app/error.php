@@ -70,7 +70,7 @@ http_response_code($codigo);
       </div>
       <div class="pie__legal">
         <span>&copy; 2026 Hospital Nacional Ramiro Prialé Prialé</span>
-        <span>Universidad Nacional del Centro del Perú · Desarrollo de Aplicaciones Web</span>
+        <span>Universidad Nacional del Centro del Perú - Desarrollo de Aplicaciones Web - Gago Uribe Edgar Robert - Huamanlazo Pariona Steven Luis</span>
       </div>
     </div>
   </footer>
