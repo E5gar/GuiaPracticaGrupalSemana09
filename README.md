@@ -139,3 +139,22 @@ Las capturas de pantalla, logs y respuestas HTTP están en la carpeta [docs/capt
 ![Estructura de carpetas del repositorio](docs/capturas/php-07-estructura.png)
 
 ![Vista móvil con el menú abierto](docs/capturas/php-08-movil.png)
+
+
+
+## Capturas JSP
+![Formulario JSP con inicio y registro de contacto](docs/capturas/jsp-01-formulario.png)
+
+![Tabla JSP con dos registros de contacto](docs/capturas/jsp-02-tabla.png)
+
+![Respuesta JSP de método no permitido 405](docs/capturas/jsp-03-error-405.png)
+
+![Respuesta JSP de datos inválidos 422](docs/capturas/jsp-04-error-422.png)
+
+![Solicitudes curl y respuestas HTTP de la aplicación JSP](docs/capturas/jsp-05-curl.png)
+
+![Últimas solicitudes de la aplicación JSP en el log de Tomcat](docs/capturas/jsp-06-log-tomcat.png)
+
+![Estructura de archivos del proyecto JSP](docs/capturas/jsp-07-estructura.png)
+
+![Aplicación JSP en móvil con el menú desplegado](docs/capturas/jsp-08-movil.png)
