@@ -1,33 +1,29 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" trimDirectiveWhitespaces="true" isErrorPage="true" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isErrorPage="true" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%
-  Integer codigo = (Integer) request.getAttribute("codigo");
-  if (codigo == null) {
-    codigo = (Integer) request.getAttribute("jakarta.servlet.error.status_code");
-  }
-  if (codigo == null) {
-    codigo = 404;
+  Integer codigoError = (Integer) request.getAttribute("jakarta.servlet.error.status_code");
+  int codigo = codigoError != null ? codigoError : 404;
+  if (codigoError == null) {
+    response.setStatus(404);
   }
 
-  String titulo = (String) request.getAttribute("titulo");
-  String detalle = (String) request.getAttribute("detalle");
-  if (titulo == null || detalle == null) {
-    if (codigo == 405) {
-      titulo = "Método no permitido";
-      detalle = "Esta página solo recibe datos enviados desde el formulario de registro.";
-    } else if (codigo == 422) {
-      titulo = "Datos inválidos";
-      detalle = "El nombre o el correo electrónico no tienen un formato válido.";
-    } else if (codigo >= 500) {
-      titulo = "Error del servidor";
-      detalle = "Ocurrió un problema al procesar la solicitud. Inténtalo nuevamente en unos minutos.";
-    } else {
-      titulo = "Página no encontrada";
-      detalle = "La página que buscas no existe o fue movida.";
-    }
+  String titulo;
+  String detalle;
+  if (codigo == 405) {
+    titulo = "Método no permitido";
+    detalle = "Esta página solo recibe datos enviados desde el formulario de registro.";
+  } else if (codigo == 422) {
+    titulo = "Datos inválidos";
+    Object detalleError = request.getAttribute("detalleError");
+    detalle = detalleError != null ? detalleError.toString() : "Los datos enviados no superaron la validación.";
+  } else if (codigo >= 500) {
+    titulo = "Error del servidor";
+    detalle = "Ocurrió un problema al procesar la solicitud. Inténtalo nuevamente en unos minutos.";
+  } else {
+    titulo = "Página no encontrada";
+    detalle = "La página que buscas no existe o fue movida.";
   }
 
-  response.setStatus(codigo);
   request.setAttribute("codigo", codigo);
   request.setAttribute("titulo", titulo);
   request.setAttribute("detalle", detalle);
@@ -38,13 +34,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Error ${codigo} | Hospital Nacional Ramiro Prialé Prialé</title>
-  <link rel="stylesheet" href="css/estilos.css">
+  <title>Error <c:out value="${codigo}"/> | Hospital Nacional Ramiro Prialé Prialé</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/estilos.css">
 </head>
 <body>
   <header class="cabecera">
     <div class="contenedor cabecera__interno">
-      <a class="logo" href="index.jsp">
+      <a class="logo" href="${pageContext.request.contextPath}/index.jsp">
         <span class="logo__nombre">Ramiro Prialé Prialé</span>
         <span class="logo__sub">Hospital Nacional</span>
       </a>
@@ -54,10 +50,10 @@
         <span class="oculto-visual">Abrir menú</span>
       </label>
       <nav class="nav" aria-label="Principal">
-        <a class="nav-enlace enlace-roll" href="index.jsp"><span class="enlace-roll__texto">Inicio</span><span class="enlace-roll__texto" aria-hidden="true">Inicio</span></a>
-        <a class="nav-enlace enlace-roll" href="index.jsp#como-funciona"><span class="enlace-roll__texto">Cómo funciona</span><span class="enlace-roll__texto" aria-hidden="true">Cómo funciona</span></a>
-        <a class="nav-enlace enlace-roll" href="index.jsp#ubicacion"><span class="enlace-roll__texto">Ubicación</span><span class="enlace-roll__texto" aria-hidden="true">Ubicación</span></a>
-        <a class="boton" href="index.jsp#registro">Registrar contacto</a>
+        <a class="nav-enlace enlace-roll" href="${pageContext.request.contextPath}/index.jsp"><span class="enlace-roll__texto">Inicio</span><span class="enlace-roll__texto" aria-hidden="true">Inicio</span></a>
+        <a class="nav-enlace enlace-roll" href="${pageContext.request.contextPath}/index.jsp#como-funciona"><span class="enlace-roll__texto">Cómo funciona</span><span class="enlace-roll__texto" aria-hidden="true">Cómo funciona</span></a>
+        <a class="nav-enlace enlace-roll" href="${pageContext.request.contextPath}/index.jsp#ubicacion"><span class="enlace-roll__texto">Ubicación</span><span class="enlace-roll__texto" aria-hidden="true">Ubicación</span></a>
+        <a class="boton" href="${pageContext.request.contextPath}/index.jsp#registro">Registrar contacto</a>
       </nav>
     </div>
   </header>
@@ -65,10 +61,10 @@
   <main>
     <section class="contenedor">
       <div class="estado">
-        <span class="insignia"><i data-lucide="${icono}" class="icono icono--pequeno"></i>Error ${codigo}</span>
+        <span class="insignia"><i data-lucide="${icono}" class="icono icono--pequeno"></i>Error <c:out value="${codigo}"/></span>
         <h1 class="titulo-lg"><c:out value="${titulo}"/></h1>
         <p><c:out value="${detalle}"/></p>
-        <a class="boton boton--negro" href="index.jsp#registro"><i data-lucide="arrow-left" class="icono"></i>Volver al formulario</a>
+        <a class="boton boton--negro" href="${pageContext.request.contextPath}/index.jsp#registro"><i data-lucide="arrow-left" class="icono"></i>Volver al formulario</a>
       </div>
     </section>
   </main>
@@ -83,9 +79,9 @@
         <div>
           <h4>Navegación</h4>
           <ul class="pie__lista">
-            <li><a href="index.jsp">Inicio</a></li>
-            <li><a href="index.jsp#registro">Registro</a></li>
-            <li><a href="index.jsp#ubicacion">Ubicación</a></li>
+            <li><a href="${pageContext.request.contextPath}/index.jsp">Inicio</a></li>
+            <li><a href="${pageContext.request.contextPath}/index.jsp#registro">Registro</a></li>
+            <li><a href="${pageContext.request.contextPath}/index.jsp#ubicacion">Ubicación</a></li>
           </ul>
         </div>
         <div>

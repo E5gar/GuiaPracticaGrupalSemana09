@@ -1,62 +1,27 @@
-# Matriz comparativa PHP y JSP
-Comparación de las dos implementaciones del Sistema de Registro de Contacto del Hospital Nacional Ramiro Prialé Prialé.
+# Matriz comparativa PHP vs JSP
 
-## Tecnología y entorno
-| Aspecto | PHP | JSP |
+Comparación técnica de las dos implementaciones del Sistema de Registro de Contacto.
+
+| Criterio | PHP (XAMPP, Apache) | JSP (Tomcat 10.1) |
 |---|---|---|
-| Lenguaje | PHP 8.2 | Java 17 con JSP 3.1 y EL 5.0 |
-| Servidor | Apache 2.4 de XAMPP con el módulo de PHP | Apache Tomcat 10.1 con el motor Jasper |
-| Puerto por defecto | 80 | 8080 |
-| Modelo de ejecución | El script se interpreta en cada petición | La página se traduce a un servlet, se compila una vez y se reutiliza |
-| Configuración de la app | No necesita archivo propio | `WEB-INF/web.xml` con página de inicio, cookie de sesión y páginas de error |
-| Librerías externas | Ninguna, usa extensiones nativas | JSTL de Jakarta en `WEB-INF/lib` |
-| Despliegue | Carpeta en `htdocs` | Carpeta en `webapps` |
+| Ciclo de vida | Cada petición ejecuta el script desde cero (modelo share-nothing). Apache entrega el archivo al intérprete PHP, que lo ejecuta, responde y libera variables y memoria. Con OPcache el bytecode se reutiliza entre peticiones. | En la primera petición Jasper traduce el `.jsp` a un servlet Java y lo compila. El contenedor crea una sola instancia que atiende las peticiones en hilos distintos, con las fases `jspInit`, `_jspService` y `jspDestroy`. |
+| Rendimiento | Arranque rápido por petición y buen desempeño con OPcache. Escala añadiendo procesos o servidores. | La primera petición es más lenta por la compilación. Luego el JIT de la JVM optimiza el código, con buen rendimiento sostenido bajo concurrencia y mayor consumo base de memoria. |
+| Despliegue | Se copian los archivos a `htdocs`. No hay compilación ni empaquetado. Apache escucha en el puerto 80 y se configura con `httpd.conf` y `php.ini`. | Se publica una carpeta o un WAR en `webapps`, con `WEB-INF/web.xml` y las librerías en `WEB-INF/lib`. Requiere JDK y escucha en el puerto 8080. Los cambios en un JSP se recompilan solos, y los de `web.xml` requieren recarga. |
+| Gestión de estado | `$_SESSION` tras `session_start()`. El identificador viaja en la cookie `PHPSESSID` y los datos se guardan por defecto en archivos del servidor (`session.save_path`). | Objeto implícito `session` (`HttpSession`). El identificador viaja en la cookie `JSESSIONID` y los datos viven en la memoria de la JVM, con ámbitos `request`, `session` y `application` compartidos entre hilos. |
+| Plantillas y sintaxis | Etiquetas `<?php ?>` y `<?= ?>` mezcladas con HTML, con funciones nativas del lenguaje. | Scriptlets `<% %>`, expresiones EL `${}` y etiquetas JSTL como `<c:forEach>` y `<c:out>`, que separan mejor la vista de la lógica. |
+| Seguridad básica | `htmlspecialchars` para escapar salida, `filter_input` y `filter_var` para validar entrada. | `<c:out>` escapa por defecto, y la validación se hace con expresiones regulares y comprobaciones en Java. Ambos requieren validar siempre en el servidor. |
+| Madurez del ecosistema | Lenguaje de 1995 con una comunidad web muy grande. Usa Composer y Packagist, con frameworks como Laravel y Symfony y plataformas como WordPress. | Tecnología de 1999 integrada en Jakarta EE. Usa Maven y Gradle, con frameworks como Spring. Es habitual en sistemas empresariales y heredados, y hoy suele convivir con otras capas de vista. |
 
-## Archivos equivalentes
-| Función | PHP | JSP |
+### Aplicado en este proyecto
+
+| Elemento | php-app | jsp-app |
 |---|---|---|
-| Formulario | `index.html` | `index.jsp` |
-| Procesamiento y respuesta | `procesar.php` | `procesar.jsp` |
-| Página de error | `error.php` | `error.jsp` |
-| Estilos | `css/estilos.css` | `css/estilos.css`, mismo archivo |
-
-## Manejo de la petición
-| Aspecto | PHP | JSP |
-|---|---|---|
-| Verificar el método POST | `$_SERVER['REQUEST_METHOD']` | `request.getMethod()` |
-| Leer los campos | `filter_input(INPUT_POST, 'nombre', ...)` | `request.getParameter("nombre")` |
-| Codificación de entrada | UTF-8 por defecto en PHP 8 | `request.setCharacterEncoding("UTF-8")` antes de leer |
-| Validar el nombre | `preg_match` con `\p{L}` y `mb_strlen` | `String.matches` con `\p{L}` y `codePointCount` |
-| Validar el correo | `filter_var` con `FILTER_VALIDATE_EMAIL` | Expresión regular con `String.matches` |
-| Fecha del registro | `date()` con zona `America/Lima` | `ZonedDateTime` con zona `America/Lima` |
-
-## Sesión y seguridad
-| Aspecto | PHP | JSP |
-|---|---|---|
-| Iniciar la sesión | `session_start()` explícito | Implícita, el objeto `session` ya existe |
-| Cookie de sesión | `PHPSESSID` | `JSESSIONID` |
-| Cookie HttpOnly | Opción `cookie_httponly` en `session_start` | `<http-only>` en `web.xml` |
-| Guardar registros | Arreglo en `$_SESSION['registros']` | `List<Map<String, String>>` en el atributo `registros` |
-| Protección XSS | `htmlspecialchars` con `ENT_QUOTES` | `<c:out>` de JSTL, que escapa por defecto |
-| Recorrer la tabla | `foreach` | `<c:forEach>` |
-
-## Manejo de errores
-| Código | PHP | JSP |
-|---|---|---|
-| 405 | `procesar.php` incluye `error.php` y envía `Allow: POST` | `procesar.jsp` reenvía a `error.jsp` y envía `Allow: POST` |
-| 422 | `procesar.php` incluye `error.php` con el detalle | `procesar.jsp` reenvía a `error.jsp` con el detalle |
-| 404 y 500 | Lo resuelve Apache | `error-page` en `web.xml` dirige a `error.jsp` |
-| Fijar el código | `http_response_code()` | `response.setStatus()` |
-
-## Ventajas y desventajas
-| Criterio | PHP | JSP |
-|---|---|---|
-| Curva de aprendizaje | Baja, sintaxis directa | Media, requiere Java, EL y JSTL |
-| Puesta en marcha | Inmediata con XAMPP | Requiere JDK, Tomcat y librerías JSTL |
-| Rendimiento | Bueno, depende de OPcache | Alto tras la primera compilación |
-| Tipado | Dinámico | Estático, los errores se detectan al compilar |
-| Escalabilidad | Adecuada para proyectos pequeños y medianos | Adecuada para aplicaciones empresariales |
-| Hosting | Muy disponible y económico | Menos común, requiere contenedor de servlets |
-
-## Conclusión
-Ambas aplicaciones cumplen el mismo ciclo HTTP: reciben un POST, validan los datos, los guardan en la sesión y responden con una tabla escapada contra XSS o con una página de error. PHP resuelve el caso con menos configuración y menos pasos de despliegue. JSP exige más infraestructura, pero ofrece tipado estático, separación entre lógica y vista mediante EL y JSTL, y la configuración declarativa de `web.xml`.
+| Archivos | `index.html`, `procesar.php`, `error.php` | `index.jsp`, `procesar.jsp`, `error.jsp`, `WEB-INF/web.xml` |
+| URL local | `http://localhost/php-app/` | `http://localhost:8080/jsp-app/` |
+| Validación del método | `$_SERVER['REQUEST_METHOD']` con respuesta 405 y cabecera `Allow: POST` | `request.getMethod()` con `sendError(405)` y cabecera `Allow: POST` |
+| Lectura de datos | `filter_input(INPUT_POST, ...)` | `request.getParameter(...)` |
+| Validación | Longitud, expresión regular `\p{L}` y `FILTER_VALIDATE_EMAIL` | Longitud, expresión regular `\p{L}` y expresión regular de correo |
+| Prevención de XSS | `htmlspecialchars` mediante la función `e()` | `<c:out>` |
+| Sesión | `$_SESSION['registros']` con cookie `HttpOnly` y `SameSite=Lax` | `session.getAttribute("registros")` con cookie `JSESSIONID` `HttpOnly` |
+| Iteración de la tabla | `foreach` | `<c:forEach>` con `varStatus` |
+| Errores 4xx y 5xx | Función `fallar()` que carga `error.php` | `sendError` y `<error-page>` en `web.xml` que apuntan a `error.jsp` |

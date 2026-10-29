@@ -1,14 +1,11 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" trimDirectiveWhitespaces="true" import="java.util.*,java.time.*,java.time.format.DateTimeFormatter" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" import="java.util.*,java.time.*,java.time.format.DateTimeFormatter" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%
   request.setCharacterEncoding("UTF-8");
 
   if (!"POST".equals(request.getMethod())) {
     response.setHeader("Allow", "POST");
-    request.setAttribute("codigo", 405);
-    request.setAttribute("titulo", "Método no permitido");
-    request.setAttribute("detalle", "Esta página solo recibe datos enviados desde el formulario de registro.");
-    request.getRequestDispatcher("/error.jsp").forward(request, response);
+    response.sendError(405);
     return;
   }
 
@@ -18,35 +15,33 @@
   correo = correo == null ? "" : correo.replaceAll("\\p{Cntrl}", "").trim();
 
   List<String> errores = new ArrayList<>();
-
   int largo = nombre.codePointCount(0, nombre.length());
   if (largo < 2 || largo > 60 || !nombre.matches("^\\p{L}[\\p{L}\\s.'-]*$")) {
     errores.add("El nombre debe tener entre 2 y 60 caracteres y contener solo letras, espacios, puntos, apóstrofes o guiones.");
   }
-
   if (correo.length() > 120 || !correo.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$")) {
     errores.add("El correo electrónico no tiene un formato válido.");
   }
-
   if (!errores.isEmpty()) {
-    request.setAttribute("codigo", 422);
-    request.setAttribute("titulo", "Datos inválidos");
-    request.setAttribute("detalle", String.join(" ", errores));
-    request.getRequestDispatcher("/error.jsp").forward(request, response);
+    request.setAttribute("detalleError", String.join(" ", errores));
+    response.sendError(422);
     return;
   }
 
-  List<Map<String, String>> registros = (List<Map<String, String>>) session.getAttribute("registros");
-  if (registros == null) {
-    registros = new ArrayList<>();
+  try {
+    List<Map<String, String>> registros = (List<Map<String, String>>) session.getAttribute("registros");
+    if (registros == null) {
+      registros = new ArrayList<>();
+    }
+    String fecha = LocalDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    registros.add(Map.of("nombre", nombre, "correo", correo, "fecha", fecha));
+    session.setAttribute("registros", registros);
+    request.setAttribute("registros", registros);
+    request.setAttribute("nombreNuevo", nombre);
+  } catch (Exception e) {
+    response.sendError(500);
+    return;
   }
-
-  String fecha = ZonedDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-  registros.add(Map.of("nombre", nombre, "correo", correo, "fecha", fecha));
-  session.setAttribute("registros", registros);
-
-  request.setAttribute("nombre", nombre);
-  request.setAttribute("registros", registros);
 %>
 <!DOCTYPE html>
 <html lang="es">
@@ -85,12 +80,12 @@
           <h1 class="titulo-lg">Registros almacenados</h1>
           <div class="alerta alerta--exito" role="status">
             <i data-lucide="circle-check" class="icono"></i>
-            <span>El registro de <strong><c:out value="${nombre}"/></strong> se guardó correctamente en tu sesión.</span>
+            <span>El registro de <strong><c:out value="${nombreNuevo}"/></strong> se guardó correctamente en tu sesión.</span>
           </div>
         </div>
 
         <div class="apilar">
-          <span class="insignia"><i data-lucide="users" class="icono icono--pequeno"></i>Total: ${registros.size()}</span>
+          <span class="insignia"><i data-lucide="users" class="icono icono--pequeno"></i>Total: <c:out value="${registros.size()}"/></span>
           <div class="tabla-contenedor">
             <table class="tabla">
               <thead>
@@ -102,12 +97,12 @@
                 </tr>
               </thead>
               <tbody>
-                <c:forEach items="${registros}" var="registro" varStatus="estado">
+                <c:forEach items="${registros}" var="r" varStatus="st">
                 <tr>
-                  <td>${estado.count}</td>
-                  <td><c:out value="${registro.nombre}"/></td>
-                  <td><c:out value="${registro.correo}"/></td>
-                  <td><c:out value="${registro.fecha}"/></td>
+                  <td><c:out value="${st.count}"/></td>
+                  <td><c:out value="${r.nombre}"/></td>
+                  <td><c:out value="${r.correo}"/></td>
+                  <td><c:out value="${r.fecha}"/></td>
                 </tr>
                 </c:forEach>
               </tbody>
