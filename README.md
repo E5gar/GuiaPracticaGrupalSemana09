@@ -97,3 +97,20 @@ Ver [docs/matriz-comparativa.md](docs/matriz-comparativa.md).
 
 ## Capturas
 Las capturas de pantalla, logs y respuestas HTTP están en la carpeta [docs/capturas](docs/capturas).
+
+
+![Formulario de registro](docs/capturas/php-01-formulario.png)
+
+![Tabla de registros almacenados](docs/capturas/php-02-tabla.png)
+
+![Error 405 método no permitido](docs/capturas/php-03-error-405.png)
+
+![Error 422 datos inválidos](docs/capturas/php-04-error-422.png)
+
+![Pruebas HTTP con curl](docs/capturas/php-05-curl.png)
+
+![Log de acceso de Apache](docs/capturas/php-06-log-apache.png)
+
+![Estructura de carpetas del repositorio](docs/capturas/php-07-estructura.png)
+
+![Vista móvil con el menú abierto](docs/capturas/php-08-movil.png)
